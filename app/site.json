@@ -1,0 +1,12 @@
+{
+	"name": "estuta",
+	"siteLogo": "/assets/images/",
+	"description": "Electronic Student Tutor application that allows students to get a tutor",
+	"supportMail": "help@estuta.com",
+	"metaDescription": "",
+	"meta": {
+		"author": "Estuta Dev Team",
+		"company": "Estuta Company Limited",
+		"email": "hq@estuta.com"
+	}
+}

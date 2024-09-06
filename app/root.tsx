@@ -19,22 +19,23 @@ import "./globals.css";
 
 function App({ children }: { children: React.ReactNode }) {
 	return (
-		<ThemeSwitcherSafeHTML lang="en">
+		<html lang="en" data-theme="light">
 			<head>
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<Meta />
 				<Links />
-				<ThemeSwitcherScript />
 			</head>
 			<body>
 				<GlobalPendingIndicator />
-				<Header />
+				{/* <Header /> */}
+				<div className="w-full">
 				{children}
+				</div>
 				<ScrollRestoration />
 				<Scripts />
 			</body>
-		</ThemeSwitcherSafeHTML>
+		</html>
 	);
 }
 

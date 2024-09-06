@@ -1,4 +1,4 @@
-import { LaptopIcon, MoonIcon, SunIcon } from "@radix-ui/react-icons";
+import { IdCardIcon, LaptopIcon, MoonIcon, PersonIcon, SunIcon } from "@radix-ui/react-icons";
 import { Link } from "@remix-run/react";
 import * as React from "react";
 import { useHydrated } from "remix-utils/use-hydrated";
@@ -31,7 +31,7 @@ export function Header() {
 			<div className="flex items-center space-x-4">
 				<Link className="flex items-center space-x-2" to="/">
 					{/* <HomeIcon className="h-6 w-6" /> */}
-					<span className="text-lg font-bold">shadcn</span>
+					<span className="text-lg font-bold">estuta</span>
 				</Link>
 			</div>
 			<DropdownMenu>
@@ -41,47 +41,33 @@ export function Header() {
 						size="icon"
 						variant="ghost"
 					>
-						<span className="sr-only">Theme selector</span>
-						{!hydrated ? null : theme === "dark" ? (
-							<MoonIcon />
-						) : theme === "light" ? (
-							<SunIcon />
+						<span className="sr-only">User selector</span>
+						 {theme === "light" ? (
+							<IdCardIcon />
 						) : (
-							<LaptopIcon />
+							<PersonIcon />
 						)}
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent className="mt-2">
-					<DropdownMenuLabel>Theme</DropdownMenuLabel>
+					<DropdownMenuLabel>User</DropdownMenuLabel>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem asChild>
 						<button
 							type="button"
 							className="w-full"
-							onClick={() => setTheme("light")}
-							aria-selected={theme === "light"}
+							onClick={() => console.log()}
 						>
-							Light
+							Tutor
 						</button>
 					</DropdownMenuItem>
 					<DropdownMenuItem asChild>
 						<button
 							type="button"
 							className="w-full"
-							onClick={() => setTheme("dark")}
-							aria-selected={theme === "dark"}
+							onClick={() => console.log()}
 						>
-							Dark
-						</button>
-					</DropdownMenuItem>
-					<DropdownMenuItem asChild>
-						<button
-							type="button"
-							className="w-full"
-							onClick={() => setTheme("system")}
-							aria-selected={theme === "system"}
-						>
-							System
+							Student
 						</button>
 					</DropdownMenuItem>
 				</DropdownMenuContent>
