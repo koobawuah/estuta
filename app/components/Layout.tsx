@@ -1,5 +1,5 @@
 import * as siteConfig from "@/site.json";
-import { useState, useEffect, ReactNode } from "react";
+import React, { useState, useEffect, ReactNode } from "react";
 import {
 	Sheet,
 	SheetClose,
@@ -19,6 +19,7 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
@@ -30,7 +31,6 @@ import {
 	CommandItem,
 	CommandList,
 } from "./ui/command";
-import { Badge } from "./ui/badge";
 import { User } from "@/types/user.type";
 import {
 	AcademicCapIcon,
@@ -43,6 +43,7 @@ import {
 	HomeIcon,
 	LifebuoyIcon,
 	MagnifyingGlassIcon,
+	UserCircleIcon,
 	UserIcon,
 } from "@heroicons/react/24/outline";
 import { title } from "@/config.shared";
@@ -51,6 +52,7 @@ import { NavMenuLinks, navNode } from "./nav-menu-links";
 type NavMenu = {
 	path: string;
 	name: string;
+	icon: React.ReactNode | string;
 };
 type Node = {
 	children: React.ReactNode;
@@ -62,7 +64,12 @@ type Node = {
 };
 
 const profileMenu: NavMenu[] = [
-	// { path: "/profile", name: "Profile" },
+	{
+		path: "/profile",
+		name: "Profile",
+		icon: <UserCircleIcon className="size-5 " />,
+	},
+
 	// { path: `mailto:${siteConfig.supportMail}`, name: "Help" },
 ];
 const nav: navNode[] = [
@@ -150,7 +157,12 @@ export default function Layout({
 					<h3 className="ml-2.5 font-bold uppercase text-xs">Learn</h3>
 					<div>
 						{nav.map((nav, idx) => (
-							<NavMenuLinks navNode={nav} key={`${nav.route + idx}`} />
+							<NavMenuLinks
+								navNode={nav}
+								key={`${nav.route + idx}`}
+								sheetOpen={sheetOpen}
+								setSheetOpen={setSheetOpen}
+							/>
 						))}
 					</div>
 				</nav>
@@ -211,7 +223,12 @@ export default function Layout({
 									<h3 className="ml-2.5 font-bold uppercase text-xs">Learn</h3>
 									<div>
 										{nav.map((nav, idx) => (
-											<NavMenuLinks navNode={nav} key={`${nav.route + idx}`} />
+											<NavMenuLinks
+												navNode={nav}
+												key={`${nav.route + idx}`}
+												sheetOpen={sheetOpen}
+												setSheetOpen={setSheetOpen}
+											/>
 										))}
 									</div>
 								</nav>
@@ -256,25 +273,12 @@ export default function Layout({
 								/>
 								<CommandList className="">
 									<CommandEmpty>Sorry, no results found.</CommandEmpty>
-									<CommandGroup heading="Suggestions">
-										<Link to="/dashboard">
-											<CommandItem className="text-sm font-light">
-												Reports
-											</CommandItem>
-										</Link>
-										<Link to="/customers">
-											<CommandItem className="text-sm font-light">
-												View customers
-											</CommandItem>
-										</Link>
-										<Link to="/transactions">
-											<CommandItem className="text-sm font-light">
-												All transactions
-											</CommandItem>
-										</Link>
-									</CommandGroup>
 									<CommandGroup heading="Quick actions">
-										<CommandItem>Account</CommandItem>
+										<Link to="/profile/account">
+											<CommandItem className="text-sm font-light">
+												Edit Account
+											</CommandItem>
+										</Link>
 									</CommandGroup>
 									<CommandGroup>
 										<Link to={`mailto:${siteConfig.supportMail}`}>
@@ -283,7 +287,7 @@ export default function Layout({
 												Help
 											</CommandItem>
 										</Link>
-										<Link to="/settings">
+										<Link to="/profile">
 											<CommandItem>
 												<CogIcon className="w-4 h-4 mr-3 stroke-1" />
 												Settings page
@@ -328,23 +332,30 @@ export default function Layout({
 										</AvatarFallback>
 									</Avatar>
 								</DropdownMenuTrigger>
-								<DropdownMenuContent className="" align="end">
+								<DropdownMenuContent className="w-44" align="end">
 									<ul>
+										<DropdownMenuLabel className="flex flex-col items-start gap-1">
+											<p className="text-xs font-normal">Signed in as</p>
+											<p>{currUser?.email}</p>
+										</DropdownMenuLabel>
+										<DropdownMenuSeparator />
 										{profileMenu?.map((link, index) => (
 											<Link
 												prefetch="intent"
 												key={`${link.name + index}`}
 												to={link?.path}
 											>
-												<DropdownMenuItem className="">
+												<DropdownMenuItem className="flex gap-2.5 cursor-pointer">
+													{link?.icon}
 													{link?.name}
 												</DropdownMenuItem>
 											</Link>
 										))}
 									</ul>
-									<DropdownMenuSeparator />
+									{/* <DropdownMenuSeparator /> */}
 									<Form action="/logout" method="post">
-										<DropdownMenuItem>
+										<DropdownMenuItem className="flex gap-2.5">
+											<ArrowRightStartOnRectangleIcon className="size-5" />
 											<button type="submit" className="w-full text-left">
 												Log out
 											</button>

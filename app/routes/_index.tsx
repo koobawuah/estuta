@@ -2,7 +2,7 @@ import * as siteConfig from "@/site.json";
 import { title } from "@/config.shared";
 import { getUserId } from "@/session.server";
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import { json, Outlet, redirect } from "@remix-run/react";
+import { json, redirect } from "@remix-run/react";
 
 export const meta: MetaFunction = () => {
 	return [
@@ -24,7 +24,7 @@ export default function Index() {
 			<h1 className="font-bold text-lg">{siteConfig.name}</h1>
 			<ul className="list-none">
 				<li>
-					<a href="/auth/login">Login</a>
+					<a href="/auth">Login in as Student</a>
 				</li>
 			</ul>
 		</main>

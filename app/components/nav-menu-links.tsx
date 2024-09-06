@@ -1,5 +1,5 @@
 import { User } from "@/types/user.type";
-import { Link, NavLink } from "@remix-run/react";
+import { NavLink } from "@remix-run/react";
 import {
 	Accordion,
 	AccordionContent,
@@ -19,7 +19,14 @@ export type navNode = {
 export function NavMenuLinks({
 	navNode,
 	className,
-}: { navNode: navNode; className?: string }) {
+	sheetOpen,
+	setSheetOpen,
+}: {
+	navNode: navNode;
+	sheetOpen: boolean;
+	setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	className?: string;
+}) {
 	return navNode.subnav && navNode.subnav.length > 0 ? (
 		<Accordion type="multiple" key={navNode.route}>
 			<AccordionItem value={navNode.route} className="border-b-0">
@@ -32,6 +39,7 @@ export function NavMenuLinks({
 					<NavLink
 						to={navNode.route}
 						end
+						onClick={() => setSheetOpen(false)}
 						className={({ isActive }) =>
 							isActive ? "font-medium text-purple-900" : ""
 						}
@@ -46,13 +54,19 @@ export function NavMenuLinks({
 				</AccordionTrigger>
 				<AccordionContent className="pb-0 ml-8">
 					{navNode.subnav.map((nav, index) => (
-						<NavMenuLinks navNode={nav} key={`${nav.link + index}`} />
+						<NavMenuLinks
+							navNode={nav}
+							key={`${nav.link + index}`}
+							sheetOpen={sheetOpen}
+							setSheetOpen={setSheetOpen}
+						/>
 					))}
 				</AccordionContent>
 			</AccordionItem>
 		</Accordion>
 	) : (
 		<NavLink
+			onClick={() => setSheetOpen(false)}
 			to={navNode.route}
 			key={navNode.route}
 			className={({ isActive }) =>
