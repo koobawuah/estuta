@@ -84,7 +84,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export const meta: MetaFunction = () => {
 	return [
-		{ title: `${siteMeta.name} | Sign in` },
+		{ title: `${siteMeta.name} | Sign into your Student account` },
 		{ name: "description", content: siteMeta.description },
 	];
 };
@@ -109,7 +109,7 @@ export default function Index() {
 	return (
 		<main className="w-full md:grid md:min-h-screen md:grid-cols-2">
 			<div className="hidden bg-muted rounded-r-xl shadow-xl md:h-full md:flex md:flex-col justify-between md:p-6">
-				<Link to="/auth">
+				<Link to="/auth/student">
 					<span className="text-lg font-bold">estuta</span>
 				</Link>
 				<div className="container prose">
@@ -204,7 +204,7 @@ export default function Index() {
 						</div>
 						<PrimaryButton
 							type="submit"
-							className="w-full text-white rounded-md bg-gray-900"
+							className="w-full text-white rounded-md bg-purple-500"
 							isLoading={navigation.state === "submitting"}
 						>
 							Sign in
@@ -215,12 +215,12 @@ export default function Index() {
 					</Form>
 					<div className="mt-4 text-center text-sm">
 						Don&apos;t have an account?{" "}
-						<Link to="#" className="underline">
+						<Link to="/auth/student/join" className="underline">
 							Sign up
 						</Link>
 					</div>
 					<div className="mt-4 text-center text-sm">
-						<Link to="#" className="underline">
+						<Link to="/auth/tutor/join" className="underline">
 							Become a tutor
 						</Link>
 					</div>

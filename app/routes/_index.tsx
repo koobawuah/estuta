@@ -24,7 +24,7 @@ export default function Index() {
 			<h1 className="font-bold text-lg">{siteConfig.name}</h1>
 			<ul className="list-none">
 				<li>
-					<a href="/auth">Login in as Student</a>
+					<a href="/auth/student">Login in as Student</a>
 				</li>
 			</ul>
 		</main>

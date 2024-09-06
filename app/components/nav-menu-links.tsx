@@ -23,8 +23,8 @@ export function NavMenuLinks({
 	setSheetOpen,
 }: {
 	navNode: navNode;
-	sheetOpen: boolean;
-	setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	sheetOpen?: boolean;
+	setSheetOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 	className?: string;
 }) {
 	return navNode.subnav && navNode.subnav.length > 0 ? (
@@ -39,7 +39,11 @@ export function NavMenuLinks({
 					<NavLink
 						to={navNode.route}
 						end
-						onClick={() => setSheetOpen(false)}
+						onClick={() => {
+							if (typeof setSheetOpen === "function") {
+								setSheetOpen(false);
+							}
+						}}
 						className={({ isActive }) =>
 							isActive ? "font-medium text-purple-900" : ""
 						}
@@ -66,7 +70,11 @@ export function NavMenuLinks({
 		</Accordion>
 	) : (
 		<NavLink
-			onClick={() => setSheetOpen(false)}
+			onClick={() => {
+				if (typeof setSheetOpen === "function") {
+					setSheetOpen(false);
+				}
+			}}
 			to={navNode.route}
 			key={navNode.route}
 			className={({ isActive }) =>
