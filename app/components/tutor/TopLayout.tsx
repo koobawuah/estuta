@@ -25,11 +25,11 @@ const nav: navNode[] = [
 		route: "/tutor",
 		// icon: <HomeIcon className="size-5" />,
 	},
-	{
-		link: "Courses",
-		route: "/tutor/courses",
-		// icon: <AcademicCapIcon className="size-5" />,
-	},
+	// {
+	// 	link: "Courses",
+	// 	route: "/tutor/courses",
+	// 	// icon: <AcademicCapIcon className="size-5" />,
+	// },
 	{
 		link: "Classrooms",
 		route: "/tutor/classrooms",

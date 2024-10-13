@@ -16,6 +16,7 @@ import {
 } from "@/components/theme-switcher";
 
 import "./globals.css";
+import { Toaster } from "./components/ui/sonner";
 
 function App({ children }: { children: React.ReactNode }) {
 	return (
@@ -29,11 +30,10 @@ function App({ children }: { children: React.ReactNode }) {
 			<body>
 				<GlobalPendingIndicator />
 				{/* <Header /> */}
-				<div className="w-full">
-				{children}
-				</div>
+				<div className="w-full">{children}</div>
 				<ScrollRestoration />
 				<Scripts />
+				<Toaster />
 			</body>
 		</html>
 	);

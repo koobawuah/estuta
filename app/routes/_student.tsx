@@ -30,7 +30,7 @@ import Layout from "@/components/Layout";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const userId = await getUserId(request);
-	if (!userId) return redirect("/auth");
+	if (!userId) return redirect("/auth/student");
 
 	const user = users.find((i) => i.id === userId);
 
