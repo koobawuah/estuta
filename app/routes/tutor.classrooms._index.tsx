@@ -50,7 +50,9 @@ export default function Index() {
 						<TableCell>Morning</TableCell>
 						<TableCell className="text-center">3</TableCell>
 						<TableCell className="text-center">5</TableCell>
-						<TableCell>{new Date("9-10-2024").toLocaleDateString()}</TableCell>
+						<TableCell>
+							{Intl.DateTimeFormat("en-gh", {}).format(new Date("9-10-2024"))}
+						</TableCell>
 						<TableCell className="text-right">GHS250.00</TableCell>
 						<TableCell className="text-right">
 							<DropdownMenu>

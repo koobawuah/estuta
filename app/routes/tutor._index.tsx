@@ -79,14 +79,14 @@ export default function TutorIndex() {
 					</CardHeader>
 					<CardContent className="grid grid-cols-2 gap-4">
 						<Link
-							to="/classrooms/new"
+							to="/tutor/classrooms/new"
 							className="p-1.5 bg-transparent rounded-sm border border-gray-200 shadow-sm hover:bg-gray-100 flex flex-row items-center transition-all"
 						>
 							<AcademicCapIcon className="size-4 mr-1.5" />
 							<p className="text-sm font-medium">New Classroom</p>
 						</Link>
 						<Link
-							to="/classrooms/modules/new"
+							to="/tutor/classrooms/modules/new"
 							className="p-1.5 bg-transparent rounded-sm border border-gray-200 shadow-sm hover:bg-gray-100 flex flex-row items-center transition-all"
 						>
 							<ArchiveBoxIcon className="size-4 mr-1.5" />

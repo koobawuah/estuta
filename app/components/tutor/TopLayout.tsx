@@ -41,8 +41,8 @@ const nav: navNode[] = [
 		// icon: <UserIcon className="size-5" />,
 	},
 	{
-		link: "Earnings",
-		route: "/tutor/account/earnings",
+		link: "Settings",
+		route: "/tutor/settings",
 		// icon: <CreditCardIcon className="size-5" />,
 	},
 ];
