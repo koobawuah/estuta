@@ -209,6 +209,20 @@ export default function Index() {
 						>
 							Sign in
 						</PrimaryButton>
+						<div className="flex justify-center items-center my-4 space-x-2.5">
+							<hr className="w-full border-t border-gray-300" />
+							<span className="py-0.5 text-sm text-gray-400">OR</span>
+							<hr className="w-full border-t border-gray-300" />
+						</div>
+
+						<Button variant="outline" className="w-full">
+							<img
+								className="w-5"
+								src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-1024.png"
+								alt="Google auth logo"
+							/>{" "}
+							Login with Google
+						</Button>
 						{/* <Button variant="outline" className="w-full">
               Login with Google
             </Button> */}

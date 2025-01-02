@@ -97,6 +97,11 @@ export default function StudentJoin() {
 							Sign up
 						</PrimaryButton>
 						<Button variant="outline" className="w-full">
+							<img
+								className="w-5"
+								src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-1024.png"
+								alt="Google auth logo"
+							/>{" "}
 							Login with Google
 						</Button>
 					</Form>
