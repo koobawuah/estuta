@@ -32,6 +32,10 @@ import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { useLoaderData, useMatches } from "@remix-run/react";
+import { copyShareableLink, getBreadcrumbs } from "@/lib/utils";
+import { Breadcrumb, BreadcrumbLink } from "@/components/ui/breadcrumb";
+import { Breadcrumbs } from "@/components/tutor/breadcrumbs";
 
 const newClassroomSchema = z.object({
 	title: z.string().min(3).max(50),
@@ -42,11 +46,21 @@ const newClassroomSchema = z.object({
 	rate: z.string().min(1),
 });
 
-export async function loader({ request }: LoaderFunctionArgs) {
-	return json({ status: "ok" });
+export async function loader({ request, params }: LoaderFunctionArgs) {
+	const location = params;
+
+	return json({ location });
 }
 
-export default function NewClassroom() {
+export const handle = {
+	breadcrumb: () => <BreadcrumbLink href="edit/">Edit</BreadcrumbLink>,
+};
+
+export default function EditClassroom() {
+	const { location } = useLoaderData<typeof loader>();
+	const crumbs = useMatches();
+	const { slug } = location;
+
 	const linkBtn = useRef<HTMLButtonElement | null>(null);
 	// 1. Define your form.
 	const classroomForm = useForm<z.infer<typeof newClassroomSchema>>({
@@ -67,33 +81,14 @@ export default function NewClassroom() {
 		console.log(values);
 	}
 
-	const copyShareableLink = () => {
-		linkBtn.current?.addEventListener("click", () => {
-			// Get the text content of the button
-			const buttonText = linkBtn.current?.textContent;
-
-			// Use the Clipboard API to copy the text to the clipboard
-			navigator.clipboard
-				.writeText(buttonText as string)
-				.then(() => {
-					// Optionally, notify the user that the text has been copied
-					toast(`Text copied to clipboard: ${buttonText as string}`);
-				})
-				.catch((err) => {
-					console.error("Error copying text: ", err);
-				});
-		});
-		return () =>
-			linkBtn.current?.removeEventListener("click", copyShareableLink);
-	};
-
 	return (
 		<div className="max-w-6xl mx-auto w-full space-y-5">
+			<Breadcrumbs routes={getBreadcrumbs(crumbs)} />
 			<div className="flex flex-row justify-between">
 				<aside className="">
-					<h2 className="font-bold text-2xl">Create New Classroom</h2>
+					<h2 className="font-bold text-2xl">Edit {slug} classroom</h2>
 					<p className="font-normal text-base">
-						Add inforamtion about the new classroom.
+						Edit inforamtion about the classroom.
 					</p>
 				</aside>
 				<div className="hidden md:block">
@@ -103,7 +98,7 @@ export default function NewClassroom() {
 						ref={linkBtn}
 						variant="outline"
 						className="-ml-2.5 cursor-pointer rounded-full"
-						onClick={copyShareableLink}
+						onClick={copyShareableLink(linkBtn)}
 					>
 						https://estuta.com/classroom/xsuqpow
 					</Button>

@@ -1,6 +1,7 @@
 import { User } from "@/types/user.type";
-import { useMatches } from "@remix-run/react";
+import { UIMatch, useMatches } from "@remix-run/react";
 import { useMemo } from "react";
+import { toast } from "sonner";
 
 const DEFAULT_REDIRECT = "/";
 
@@ -73,3 +74,29 @@ export function useUser(): User {
 export function validateEmail(email: unknown): email is string {
   return typeof email === "string" && email.length > 3 && email.includes("@");
 }
+
+export const copyShareableLink = (
+  linkBtn: React.MutableRefObject<HTMLButtonElement | null>
+) => {
+  linkBtn.current?.addEventListener("click", () => {
+    // Get the text content of the button
+    const buttonText = linkBtn.current?.textContent;
+
+    // Use the Clipboard API to copy the text to the clipboard
+    navigator.clipboard
+      .writeText(buttonText as string)
+      .then(() => {
+        // Optionally, notify the user that the text has been copied
+        toast(`Text copied to clipboard: ${buttonText as string}`);
+      })
+      .catch((err) => {
+        console.error("Error copying text: ", err);
+      });
+  });
+  return () =>
+    linkBtn.current?.removeEventListener("click", copyShareableLink(linkBtn));
+};
+
+export const getBreadcrumbs = (matches: UIMatch[]) => {
+  return matches.filter((match) => match.handle);
+};

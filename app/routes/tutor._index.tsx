@@ -25,10 +25,15 @@ import {
 	ArchiveBoxIcon,
 	CalendarDateRangeIcon,
 } from "@heroicons/react/24/outline";
+import { BreadcrumbLink } from "@/components/ui/breadcrumb";
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	return json({ status: "ok" });
 }
+
+export const handle = {
+	breadcrumb: () => <BreadcrumbLink href="tutor">Tutor</BreadcrumbLink>,
+};
 
 export default function TutorIndex() {
 	return (

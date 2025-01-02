@@ -1,9 +1,18 @@
+import { Breadcrumbs } from "@/components/tutor/breadcrumbs";
+import {
+	Breadcrumb,
+	BreadcrumbItem,
+	BreadcrumbLink,
+	BreadcrumbList,
+	BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import {
 	DropdownMenu,
 	DropdownMenuTrigger,
 	DropdownMenuContent,
 	DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { getBreadcrumbs } from "@/lib/utils";
 import {
 	AcademicCapIcon,
 	ArchiveBoxIcon,
@@ -15,18 +24,29 @@ import {
 	VariableIcon,
 } from "@heroicons/react/24/outline";
 import { json, LoaderFunctionArgs } from "@remix-run/node";
-import { Link, NavLink, Outlet } from "@remix-run/react";
+import { Link, NavLink, Outlet, UIMatch, useMatches } from "@remix-run/react";
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	return json({ status: "ok" });
 }
 
+export const handle = {
+	breadcrumb: () => (
+		<BreadcrumbLink href="tutor/classrooms">Classrooms</BreadcrumbLink>
+	),
+};
+
 export default function TutorClassrooms() {
+	const breadcrumbs = useMatches();
+	const crumbs = getBreadcrumbs(breadcrumbs);
+	// console.log("Bd: ", getBreadcrumbs(breadcrumbs));
+
 	return (
 		<div className="max-w-6xl mx-auto w-full space-y-5">
 			<div className="flex flex-col">
 				<aside className="my-4">
 					<h2 className="font-bold text-2xl">Classrooms</h2>
+					<Breadcrumbs routes={crumbs} />
 				</aside>
 
 				<div className="flex flex-row items-center justify-between">
@@ -42,7 +62,7 @@ export default function TutorClassrooms() {
 								}
 							>
 								<BuildingLibraryIcon className="size-4 mr-1.5" />
-								All
+								All Classrooms
 							</NavLink>
 						</li>
 						<li>

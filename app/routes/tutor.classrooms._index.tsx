@@ -14,6 +14,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import {
+	EyeIcon,
 	EllipsisVerticalIcon,
 	PencilSquareIcon,
 	TrashIcon,
@@ -60,9 +61,17 @@ export default function Index() {
 									<EllipsisVerticalIcon className="size-6" />
 								</DropdownMenuTrigger>
 								<DropdownMenuContent>
-									<DropdownMenuItem>
-										<PencilSquareIcon className="size-4 mr-2.5" />
-										Edit
+									<DropdownMenuItem asChild>
+										<Link to={"nurscollege"} className="cursor-pointer">
+											<EyeIcon className="size-4 mr-2.5" />
+											View
+										</Link>
+									</DropdownMenuItem>
+									<DropdownMenuItem asChild>
+										<Link to={"edit/nurscollege"} className="cursor-pointer">
+											<PencilSquareIcon className="size-4 mr-2.5" />
+											Edit
+										</Link>
 									</DropdownMenuItem>
 									<DropdownMenuSeparator />
 									<DropdownMenuItem>
