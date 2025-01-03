@@ -46,5 +46,7 @@ export default function ViewClassroom() {
 }
 
 export const handle = {
-	breadcrumb: (v) => <BreadcrumbLink href={v.link}>{v.name}</BreadcrumbLink>,
+	breadcrumb: (v: { link: string; name: string }) => (
+		<BreadcrumbLink href={v.link}>{v.name}</BreadcrumbLink>
+	),
 };

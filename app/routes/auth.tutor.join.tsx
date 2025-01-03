@@ -13,7 +13,7 @@ import {
 	useNavigation,
 	useSearchParams,
 } from "@remix-run/react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import PrimaryButton from "@/components/primary-button";
@@ -23,6 +23,7 @@ import { createUserSession, getUserId } from "@/session.server";
 import { validateEmail } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { cn } from "@/lib/styles";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const userId = await getUserId(request);
@@ -228,14 +229,20 @@ export default function TutorJoin() {
 							<hr className="w-full border-t border-gray-300" />
 						</div>
 
-						<Button variant="outline" className="w-full">
+						<Link
+							to=""
+							className={cn(
+								"w-full",
+								buttonVariants({ variant: "outline", size: "default" }),
+							)}
+						>
 							<img
 								className="w-5"
 								src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-1024.png"
 								alt="Google auth logo"
 							/>{" "}
 							Login with Google
-						</Button>
+						</Link>
 					</div>
 				</main>
 			</div>
