@@ -6,15 +6,12 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { users } from "@/models/user.server";
-import { getUserId } from "@/session.server";
+import { getUser } from "@/services/auth.server";
+import { getSessionId } from "@/services/session.server";
 import { json, LoaderFunctionArgs, redirect } from "@remix-run/node";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const userId = await getUserId(request);
-	if (!userId) return redirect("/auth");
-
-	const user = users.find((i) => i.id === userId);
-
+	const user = await getUser(request)
 	return json({ user });
 };
 

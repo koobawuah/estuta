@@ -5,7 +5,7 @@ import {
 	MetaFunction,
 	redirect,
 } from "@remix-run/node";
-import { getUserId } from "@/session.server";
+import { getSessionId } from "@/services/session.server";
 import * as siteMeta from "@/site.json";
 import {
 	Form,
@@ -18,7 +18,17 @@ import { useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import PrimaryButton from "@/components/primary-button";
-import { users } from "@/models/user.server";
+import { forgotPassword } from "@/services/auth.server";
+import { useToast } from "@/hooks/use-toast"
+
+type ActionData = {
+	success?: boolean;
+	message?: string;
+	errors?: {
+		validation?: string;
+		general?: string;
+	};
+};
 
 export const meta: MetaFunction = () => {
 	return [
@@ -28,7 +38,7 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const userId = await getUserId(request);
+	const userId = await getSessionId(request);
 	if (userId) return redirect("/student");
 
 	return json({ status: "ok" });
@@ -38,39 +48,56 @@ export async function action({ request }: ActionFunctionArgs) {
 	const formData = await request.formData();
 	const email = formData.get("email") as string;
 
-	console.log("Work with this email to recover account ", email);
+	const result = await forgotPassword(email);
 
-	//talk to api
+	if (result.errors) {
+		return json<ActionData>(result);
+	}
 
-	const success = users.find((u) => u.email === email)?.email?.includes(email);
-	const message = success
-		? "Password reset link has been sent to your email!"
-		: "Something went wrong, please try again later.";
-
-	return json({
-		status: 200,
-		success: success && { message },
-		errors: !success && "Something went wrong, Please try again.",
+	return json<ActionData>({
+		success: true,
+		message: "Password reset instructions have been sent to your email"
 	});
 }
 
 export default function ForgotPassword() {
 	const navigation = useNavigation();
-	const actionData = useActionData<typeof action>();
+	const actionData = useActionData<ActionData>();
 	const emailRef = useRef<HTMLInputElement>(null);
+	const { toast } = useToast();
 
 	useEffect(() => {
 		if (actionData?.success) {
-			setTimeout(() => location.replace("/"), 6000);
+			setTimeout(() => {
+				location.replace("/auth/student");
+			}, 60000);
 		}
 	}, [actionData]);
 
 	return (
 		<main className="w-full md:grid md:min-h-screen md:grid-cols-1">
+			{actionData?.success && (
+				<div 
+					className="fixed top-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded animate-in fade-in slide-in-from-top-4 duration-300"
+					style={{
+						animation: 'fadeInOut 1s ease-in-out forwards'
+					}}
+				>
+					<style>{`
+						@keyframes fadeInOut {
+							0% { opacity: 0; transform: translateY(-1rem); }
+							2% { opacity: 1; transform: translateY(0); }
+							80% { opacity: 1; }
+							100% { opacity: 0; }
+						}
+					`}</style>
+					<p>{actionData.message}</p>
+				</div>
+			)}
 			<div className="h-screen flex items-center justify-center py-12">
 				<div className="mx-auto grid w-[350px] gap-6">
 					<div className="grid gap-2 text-center">
-						<Link to="/auth" className="">
+						<Link to="/auth/student" className="">
 							<span className="text-lg font-bold">{siteMeta.name}</span>
 						</Link>
 						<h1 className="text-3xl font-bold">Forgot Your Password?</h1>
@@ -86,15 +113,15 @@ export default function ForgotPassword() {
 								required
 								ref={emailRef}
 								autoComplete="email"
-								className="w-full rounded border border-zinc-300 px-2 py-1 text-zinc-800 text-base focus:outline-none focus:ring-2 focus:ring-blue-800 "
+								className="w-full rounded border border-zinc-300 px-2 py-1 text-zinc-800 text-base focus:outline-none focus:ring-2 focus:ring-blue-800"
 							/>
-							{actionData?.success ? (
-								<div className="pt-1 text-green-700" id="email-success">
-									{actionData.success?.message}
-								</div>
-							) : actionData?.errors ? (
+							{actionData?.errors?.validation ? (
 								<div className="pt-1 text-red-700" id="email-error">
-									{actionData.errors}
+									{actionData.errors.validation}
+								</div>
+							) : actionData?.errors?.general ? (
+								<div className="pt-1 text-red-700" id="general-error">
+									{actionData.errors.general}
 								</div>
 							) : (
 								<span className="pt-7" />
@@ -108,7 +135,7 @@ export default function ForgotPassword() {
 							Recover Password
 						</PrimaryButton>
 					</Form>
-					<Link to="/auth/student" className=" inline-block text-sm underline">
+					<Link to="/auth/student" className="inline-block text-sm underline">
 						Remember your account details, Login?
 					</Link>
 				</div>

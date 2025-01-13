@@ -1,8 +1,7 @@
 import PrimaryButton from "@/components/primary-button";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/styles";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import {
 	ActionFunctionArgs,
@@ -19,183 +18,154 @@ import {
 } from "@remix-run/react";
 import { useEffect, useRef, useState } from "react";
 import * as siteMeta from "@/site.json";
-import { getUserId } from "@/session.server";
+import { resetPassword } from "@/services/auth.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const userId = await getUserId(request);
-	if (userId) return redirect("/student");
-
+	const token = new URL(request.url).searchParams.get("token");
+	if (!token) {
+		return redirect("/auth/student");
+	}
 	return json({ status: "ok" });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
 	const formData = await request.formData();
-	const newPass = formData.get("new-password");
-	const confirmPass = formData.get("confirm-password");
-	const reference = formData.get("reference");
-
-	console.log(
-		"Work with the following; \n",
-		`${reference}, ${newPass} and ${confirmPass}`,
-	);
-	if (!reference) return redirect("/");
+	const newPass = formData.get("new-password") as string;
+	const confirmPass = formData.get("confirm-password") as string;
+	const token = formData.get("token") as string;
 
 	if (
 		!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
-			newPass?.toString() || "",
+			newPass
 		)
 	) {
 		return json({
 			errors: {
 				password:
-					"Password must contain at least; one uppercase letter, one lowercase letter, one number, one special character",
+					"Password must contain at least: one uppercase letter, one lowercase letter, one number, one special character",
 				message: "",
 			},
 		});
 	}
-	if (newPass !== confirmPass)
+
+	if (newPass !== confirmPass) {
 		return json({
 			errors: {
 				password: "Passwords do not match",
 				message: "",
 			},
 		});
-
-	//talk to api
-	const verified = false;
-
-	//On verification and successful change of password redirect to login
-	const success = newPass && confirmPass && reference && verified; //back from the api
-	if (success) {
-		return redirect("/");
 	}
 
-	return json({
-		errors: {
-			password: "",
-			message: "Something went wrong, please try again.",
-		},
-	});
+	const result = await resetPassword(token, newPass);
+
+	if (result.errors) {
+		return json({
+			errors: {
+				password: "",
+				message: result.errors.general || "Something went wrong, please try again.",
+			},
+		});
+	}
+
+	return redirect("/auth/student");
 }
 
 export default function ResetPassword() {
-	const [show, setShow] = useState(false);
+	const [showPassword, setShowPassword] = useState(false);
 	const [searchParams] = useSearchParams();
-	const reference = searchParams.get("reference");
+	const token = searchParams.get("token");
 	const navigation = useNavigation();
 	const actionData = useActionData<typeof action>();
-	const passwordRef = useRef<HTMLInputElement>(null);
+	const newPasswordRef = useRef<HTMLInputElement>(null);
+	const confirmPasswordRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		if (actionData?.errors?.password) {
-			passwordRef.current?.focus();
+			newPasswordRef.current?.focus();
 		}
 	}, [actionData]);
 
+	if (!token) {
+		return <div>Invalid or missing reset token</div>;
+	}
+
 	return (
-		<main className="w-full md:grid md:min-h-screen md:grid-cols-1">
-			{/* <div className="hidden bg-muted rounded-r-xl shadow-xl md:h-full md:flex md:flex-col justify-between md:p-6">
-				<Link to="/auth/student">
-					<span className="text-lg font-bold">estuta</span>
-				</Link>
-				<div className="container prose">
-					<h2 className="text-3xl font-bold">Hello,</h2>
-					<h2 className="text-3xl font-bold">Welcome back!</h2>
-					<p className="text-base">Sign in to continue</p>
-				</div>
-				<div className="py-6">
-					<span>
-						<Link to="/">estuta </Link> &copy; {new Date().getFullYear()}
-					</span>
-				</div>
-			</div> */}
-			<div className="h-screen flex items-center justify-center py-12">
-				<div className="mx-auto grid w-[350px] gap-6">
-					<div className="grid gap-2 text-center">
-						<Link to="/auth" className="">
+		<main className="w-full md:min-h-screen">
+			<div className="flex h-screen items-center justify-center py-12">
+				<div className="mx-auto w-[350px] space-y-6">
+					<div className="text-center space-y-2">
+						<Link to="/auth/student">
 							<span className="text-lg font-bold">{siteMeta.name}</span>
 						</Link>
 						<h1 className="text-3xl font-bold">Account Reset</h1>
 					</div>
-					<Form method="post" className="grid gap-4">
-						<div className="grid gap-2.5">
-							<div className="flex items-center">
+
+					<Form method="post" className="space-y-4">
+						<div className="space-y-2.5">
+							<div>
 								<Label htmlFor="new-password">New Password</Label>
+								<div className="relative">
+									<Input
+										ref={newPasswordRef}
+										name="new-password"
+										id="new-password"
+										type={showPassword ? "text" : "password"}
+										placeholder="***********"
+										required
+										autoComplete="new-password"
+										aria-invalid={actionData?.errors?.password ? true : undefined}
+										aria-describedby="password-error"
+									/>
+								</div>
 							</div>
-							<div className="mt-1 relative">
-								<Input
-									name="new-password"
-									id="new-password"
-									type={show ? "text" : "password"}
-									placeholder="***********"
-									required
-									ref={passwordRef}
-									autoComplete="current-password"
-									aria-invalid={actionData?.errors?.password ? true : undefined}
-									aria-describedby="password-error"
-									className="w-full rounded border border-zinc-300 px-2 py-1 text-zinc-800 text-base focus:outline-none focus:ring-2 focus:ring-blue-800 "
-								/>
-							</div>
+
 							<div>
 								<Label htmlFor="confirm-password">Confirm Password</Label>
-							</div>
-							<div className="mt-1 relative">
-								<Input
-									name="confirm-password"
-									id="confirm-password"
-									type={show ? "text" : "password"}
-									placeholder="***********"
-									required
-									ref={passwordRef}
-									autoComplete="current-password"
-									aria-invalid={actionData?.errors?.password ? true : undefined}
-									aria-describedby="password-error"
-									className="w-full rounded border border-zinc-300 px-2 py-1 text-zinc-800 text-base focus:outline-none focus:ring-2 focus:ring-blue-800 "
-								/>
-								<div className="absolute p-2 inset-y-0 -right-2 flex items-center">
-									<Button
-										type="button"
-										onClick={() => setShow((prev: boolean) => !prev)}
-										variant="ghost"
-										className="p-3 m-0 hover:bg-transparent"
-									>
-										{!show ? (
-											<EyeIcon className="w-4 h-5 text-gray-500 " />
-										) : (
-											<EyeSlashIcon className="w-4 h-5 text-gray-500 " />
-										)}
-									</Button>
+								<div className="relative">
+									<Input
+										ref={confirmPasswordRef}
+										name="confirm-password"
+										id="confirm-password"
+										type={showPassword ? "text" : "password"}
+										placeholder="***********"
+										required
+										autoComplete="new-password"
+										aria-invalid={actionData?.errors?.password ? true : undefined}
+										aria-describedby="password-error"
+									/>
+									<div className="absolute inset-y-0 right-0 flex items-center">
+										<Button
+											type="button"
+											onClick={() => setShowPassword(!showPassword)}
+											variant="ghost"
+											className="h-full px-2 hover:bg-transparent"
+										>
+											{showPassword ? (
+												<EyeSlashIcon className="h-4 w-4 text-gray-500" />
+											) : (
+												<EyeIcon className="h-4 w-4 text-gray-500" />
+											)}
+										</Button>
+									</div>
 								</div>
 							</div>
 						</div>
-						<input
-							hidden
-							name="reference"
-							value={reference ? reference : ""}
-							className="sr-only"
-							readOnly
-						/>
 
-						<div className="flex items-center">
-							{actionData?.errors?.password ? (
-								<div className="pt-1 text-red-700" id="password-error">
-									{actionData.errors.password}
-								</div>
-							) : actionData?.errors?.message ? (
-								<div className="pt-1 text-red-700" id="password-error">
-									{actionData.errors.message}
-								</div>
-							) : (
-								<span className="pt-7" />
-							)}
-						</div>
+						<input type="hidden" name="token" value={token} />
+
+						{(actionData?.errors?.password || actionData?.errors?.message) && (
+							<div className="text-red-700" id="password-error">
+								{actionData.errors.password || actionData.errors.message}
+							</div>
+						)}
 
 						<PrimaryButton
 							type="submit"
-							className="w-full text-white rounded-md bg-zinc-800"
+							className="w-full bg-zinc-800 text-white"
 							isLoading={navigation.state === "submitting"}
 						>
-							Submit
+							Reset Password
 						</PrimaryButton>
 					</Form>
 				</div>

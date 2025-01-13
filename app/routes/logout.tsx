@@ -1,16 +1,15 @@
-import { getSession, sessionStorage } from "@/session.server";
+import { getSession, sessionStorage } from "@/services/session.server";
 import {
 	ActionFunctionArgs,
 	json,
 	LoaderFunctionArgs,
 	redirect,
 } from "@remix-run/node";
+import {logout} from "@/services/auth.server"
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const session = await getSession(request);
-	console.log("some", session);
-
-	return redirect("/auth/student");
+	const data = logout(request)
+	return data
 }
 
 export async function action({ request }: ActionFunctionArgs) {

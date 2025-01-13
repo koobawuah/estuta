@@ -18,69 +18,65 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import PrimaryButton from "@/components/primary-button";
 import { safeRedirect } from "remix-utils/safe-redirect";
-import { verifyLogin } from "@/models/user.server";
-import { createUserSession, getUserId } from "@/session.server";
 import { validateEmail } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/styles";
+import { getUser, emailPassLogin } from "@/services/auth.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const userId = await getUserId(request);
-	if (userId) return redirect("/student");
-
-	return json({ success: "ok" });
+	const user = await getUser(request);
+	if (user?.id) return redirect("/student");
+	return json({});
 };
+
+interface ActionError {
+	email?: string | null;
+	password?: string | null;
+	auth?: string | null;
+	general?: string | null;
+}
 
 export const action = async ({ request }: ActionFunctionArgs) => {
 	const formData = await request.formData();
 	const email = formData.get("email");
 	const password = formData.get("password");
-	const remember = formData.get("remember-me");
 	const redirectTo = safeRedirect(formData.get("redirectTo"), "/student");
-	const show = { email, password, remember };
-	// console.log("Obj", show);
+
+	const errors: ActionError = {};
 
 	if (!validateEmail(email)) {
-		return json(
-			{ errors: { email: "Email is invalid", password: null } },
-			{ status: 400 },
-		);
+		errors.email = "Please enter a valid email address";
 	}
 
-	if (typeof password !== "string" || password.length === 0) {
-		return json(
-			{ errors: { email: null, password: "Password is required" } },
-			{ status: 400 },
-		);
+	if (typeof password !== "string") {
+		errors.password = "Password is required";
+	} else if (password.length < 8) {
+		errors.password = "Password must be at least 8 characters";
 	}
 
-	if (password.length < 8) {
-		return json(
-			{ errors: { email: null, password: "Password is too short" } },
-			{ status: 400 },
-		);
+	if (Object.keys(errors).length > 0) {
+		return json({ errors }, { status: 400 });
 	}
 
-	const e = await verifyLogin(email);
-	const p = "Admin_2024";
-
-	const user = e && password === p ? e : undefined;
-	// const user = email === e && password === p ? ({ id:'1', email: e, name: 'John', role: 'Admin', }) : null
-
-	if (!user) {
-		return json(
-			{ errors: { email: "Invalid email or password", password: null } },
-			{ status: 400 },
-		);
-	}
-
-	return createUserSession({
+	const result = await emailPassLogin({
+		email: email as string,
+		password: password as string,
 		redirectTo,
-		remember: remember === "on" ? true : false,
-		request,
-		userId: user.id,
 	});
+
+	if ("errors" in result) {
+		return json({
+			errors: {
+				email: null,
+				password: null,
+				auth: result.errors.auth || null,
+				general: result.errors.general || result.errors.validation || null,
+			},
+		}, { status: 400 });
+	}
+
+	return result;
 };
 
 export const meta: MetaFunction = () => {
@@ -90,8 +86,8 @@ export const meta: MetaFunction = () => {
 	];
 };
 
-export default function Index() {
-	const [show, setShow] = useState(false);
+export default function LoginPage() {
+	const [showPassword, setShowPassword] = useState(false);
 	const [searchParams] = useSearchParams();
 	const navigation = useNavigation();
 	const redirectTo = searchParams.get("redirectTo") || "/student";
@@ -107,11 +103,13 @@ export default function Index() {
 		}
 	}, [actionData]);
 
+	const hasError = actionData?.errors?.auth || actionData?.errors?.general;
+
 	return (
 		<main className="w-full md:grid md:min-h-screen md:grid-cols-2">
-			<div className="hidden bg-muted rounded-r-xl shadow-xl md:h-full md:flex md:flex-col justify-between md:p-6">
+			<div className="hidden bg-muted rounded-r-xl shadow-xl md:block md:h-full md:p-6 flex flex-col justify-between">
 				<Link to="/auth/student">
-					<span className="text-lg font-bold">estuta</span>
+					<span className="text-lg font-bold">{siteMeta.name}</span>
 				</Link>
 				<div className="container prose">
 					<h2 className="text-3xl font-bold">Hello,</h2>
@@ -119,21 +117,29 @@ export default function Index() {
 					<p className="text-base">Sign in to continue</p>
 				</div>
 				<div className="py-6">
-					<span>
-						<Link to="/">estuta </Link> &copy; {new Date().getFullYear()}
-					</span>
+          <span>
+            <Link to="/">{siteMeta.name}</Link> &copy; {new Date().getFullYear()}
+          </span>
 				</div>
 			</div>
-			<div className="h-screen flex items-center justify-center py-12">
-				<div className="mx-auto grid w-[350px] gap-6">
-					<div className="grid gap-2 text-center">
-						<Link to="/auth" className="md:hidden">
-							<span className="text-lg font-bold">estuta</span>
+
+			<div className="flex h-screen items-center justify-center py-12">
+				<div className="mx-auto w-[350px] space-y-6">
+					<div className="text-center space-y-2">
+						<Link to="/auth/student" className="md:hidden">
+							<span className="text-lg font-bold">{siteMeta.name}</span>
 						</Link>
 						<h1 className="text-3xl font-bold">Login</h1>
 					</div>
-					<Form method="post" className="grid gap-4">
-						<div className="grid gap-2">
+
+					{hasError && (
+						<div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+							{actionData?.errors.auth || actionData?.errors.general}
+						</div>
+					)}
+
+					<Form method="post" className="space-y-4">
+						<div className="space-y-2">
 							<Label htmlFor="email">Email</Label>
 							<Input
 								id="email"
@@ -144,107 +150,122 @@ export default function Index() {
 								ref={emailRef}
 								autoComplete="email"
 								aria-invalid={actionData?.errors?.email ? true : undefined}
-								className="w-full rounded border border-zinc-300 px-2 py-1 text-zinc-800 text-base focus:outline-none focus:ring-2 focus:ring-blue-800 "
+								aria-describedby={actionData?.errors?.email ? "email-error" : undefined}
 							/>
-							{actionData?.errors?.email ? (
-								<div className="pt-1 text-red-700" id="email-error">
+							{actionData?.errors?.email && (
+								<div className="text-sm text-red-700" id="email-error">
 									{actionData.errors.email}
 								</div>
-							) : null}
+							)}
 						</div>
-						<div className="grid gap-2">
-							<div className="flex items-center">
+
+						<div className="space-y-2">
+							<div className="flex items-center justify-between">
 								<Label htmlFor="password">Password</Label>
+								<Link
+									to="/auth/forgot-password"
+									className="text-sm text-muted-foreground hover:underline"
+								>
+									Forgot password?
+								</Link>
 							</div>
-							<div className="mt-1 relative">
+							<div className="relative">
 								<Input
-									name="password"
 									id="password"
-									type={show ? "text" : "password"}
-									placeholder="***********"
+									name="password"
+									type={showPassword ? "text" : "password"}
+									placeholder="••••••••"
 									required
 									ref={passwordRef}
 									autoComplete="current-password"
 									aria-invalid={actionData?.errors?.password ? true : undefined}
-									aria-describedby="password-error"
-									className="w-full rounded border border-zinc-300 px-2 py-1 text-zinc-800 text-base focus:outline-none focus:ring-2 focus:ring-blue-800 "
+									aria-describedby={actionData?.errors?.password ? "password-error" : undefined}
 								/>
-								<div className="absolute p-2 inset-y-0 -right-2 flex items-center">
-									<Button
-										type="button"
-										onClick={() => setShow((prev) => !prev)}
-										variant="ghost"
-										className="p-3 m-0 hover:bg-transparent"
-									>
-										{!show ? (
-											<EyeIcon className="w-4 h-5 text-gray-500 " />
-										) : (
-											<EyeSlashIcon className="w-4 h-5 text-gray-500 " />
-										)}
-									</Button>
-								</div>
+								<Button
+									type="button"
+									variant="ghost"
+									className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+									onClick={() => setShowPassword(!showPassword)}
+								>
+									{showPassword ? (
+										<EyeSlashIcon className="h-4 w-4 text-gray-500" />
+									) : (
+										<EyeIcon className="h-4 w-4 text-gray-500" />
+									)}
+								</Button>
 							</div>
-							{actionData?.errors?.password ? (
-								<div className="pt-1 text-red-700" id="password-error">
+							{actionData?.errors?.password && (
+								<div className="text-sm text-red-700" id="password-error">
 									{actionData.errors.password}
 								</div>
-							) : null}
+							)}
 						</div>
+
+						<div className="flex items-center space-x-2">
+							<input
+								type="checkbox"
+								id="remember-me"
+								name="remember-me"
+								className="h-4 w-4 rounded border-gray-300"
+							/>
+							<Label htmlFor="remember-me">Remember me</Label>
+						</div>
+
 						<input type="hidden" name="redirectTo" value={redirectTo} />
-						<div className="flex items-center">
-							<input name="remember-me" type="checkbox" id="remember-me" />
-							<Label htmlFor="remember-me" className="ml-2.5">
-								Remember me
-							</Label>
-							<Link
-								to="/auth/forgot-password"
-								className="ml-auto inline-block text-sm underline"
-							>
-								Forgot your password?
-							</Link>
-						</div>
+
 						<PrimaryButton
 							type="submit"
-							className="w-full text-white rounded-md bg-purple-500"
+							className="w-full bg-purple-500 text-white"
 							isLoading={navigation.state === "submitting"}
 						>
 							Sign in
 						</PrimaryButton>
-						<div className="flex justify-center items-center my-4 space-x-2.5">
-							<hr className="w-full border-t border-gray-300" />
-							<span className="py-0.5 text-sm text-gray-400">OR</span>
-							<hr className="w-full border-t border-gray-300" />
+
+						<div className="relative">
+							<div className="absolute inset-0 flex items-center">
+								<span className="w-full border-t" />
+							</div>
+							<div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+							</div>
 						</div>
 
 						<Link
 							to=""
 							className={cn(
-								"w-full",
-								buttonVariants({ variant: "outline", size: "default" }),
+								buttonVariants({ variant: "outline" }),
+								"w-full"
 							)}
 						>
 							<img
-								className="w-5"
+								className="mr-2 h-5 w-5"
 								src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-1024.png"
-								alt="Google auth logo"
-							/>{" "}
-							Login with Google
+								alt="Google"
+							/>
+							Google
 						</Link>
-						{/* <Button variant="outline" className="w-full">
-              Login with Google
-            </Button> */}
+
+						<p className="text-center text-sm text-muted-foreground">
+							Don't have an account?{" "}
+							<Link
+								to="/auth/student/join"
+								className="font-medium text-primary hover:underline"
+							>
+								Sign up
+							</Link>
+						</p>
+
+						<div className="text-center">
+							<Link
+								to="/auth/tutor/join"
+								className="text-sm text-muted-foreground hover:underline"
+							>
+								Become a tutor
+							</Link>
+						</div>
 					</Form>
-					<div className="mt-4 text-center text-sm">
-						Don&apos;t have an account?{" "}
-						<Link to="/auth/student/join" className="underline">
-							Sign up
-						</Link>
-					</div>
-					<div className="mt-4 text-center text-sm">
-						<Link to="/auth/tutor/join" className="underline">
-							Become a tutor
-						</Link>
-					</div>
 				</div>
 			</div>
 		</main>

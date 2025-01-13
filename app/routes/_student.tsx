@@ -24,39 +24,29 @@ import { users, verifyLogin } from "@/models/user.server";
 import { validateEmail } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import { getUserId } from "@/session.server";
-import { User } from "@/types/user.type";
+import { getSessionId } from "@/services/session.server";
+// import { User } from "@/types/user.type";
 import Layout from "@/components/Layout";
+import {getUser} from "@/services/auth.server"
+import {User} from "@/types/user.type"
+// First, let's define proper types based on the API response
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const userId = await getUserId(request);
-	if (!userId) return redirect("/auth/student");
-
-	const user = users.find((i) => i.id === userId);
-
-	return json({ user });
-};
-
-export const action = async ({ request }: ActionFunctionArgs) => {};
-
-export const meta: MetaFunction = () => {
-	return [
-		{ title: `${siteMeta.name} | Student Dashboard` },
-		{ name: "description", content: siteMeta.description },
-	];
+	const data: User| Response = await getUser(request)
+	if (data instanceof Response) return data;
+	return json(data);
 };
 
 export default function Index() {
-	const { user } = useLoaderData<typeof loader>();
+	const data = useLoaderData<typeof loader>();
 	const navigation = useNavigation();
-	const actionData = useActionData<typeof action>();
 
 	return (
 		<Layout
-			currUser={user as unknown as User}
-			currentLoggedInUser={user?.name?.slice(0, 1) ?? ""}
+			currUser={data} // No need for type assertion now
+			currentLoggedInUser={data?.full_name?.slice(0, 1) ?? ""}
 		>
-			{user ? (
+			{data? (
 				<div className="my-3">
 					<Outlet />
 				</div>

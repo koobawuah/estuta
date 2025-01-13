@@ -1,7 +1,7 @@
-import { createCookieSessionStorage, redirect } from "@remix-run/node";
+import { createCookieSessionStorage, createCookie, redirect } from "@remix-run/node";
 import invariant from "tiny-invariant";
-import { getUserById } from "./models/user.server";
-import { User } from "./types/user.type";
+import { getUserById } from "@/models/user.server";
+import { User } from "@/types/user.type";
 
 invariant(process.env.SESSION_SECRET, "SESSION_SECRET must be set");
 const USER_SESSION_KEY = "userId";
@@ -19,35 +19,29 @@ export const sessionStorage = createCookieSessionStorage({
 
 export async function getSession(request: Request) {
   const cookie = request.headers.get("Cookie");
+  console.log();
   return sessionStorage.getSession(cookie);
 }
 
 // User Session Handlers
-export async function getUserId(
-  request: Request
-): Promise<User["id"] | undefined> {
+export async function getSessionId(request: Request): Promise<User["id"] | undefined> {
   const session = await getSession(request);
-  const userId = session.get(USER_SESSION_KEY);
-  return userId;
+  const sessionId = session.get(USER_SESSION_KEY);
+  return sessionId;
 }
 
 export async function getUser(request: Request) {
-  const userId = await getUserId(request);
-  if (userId === undefined) return null;
+  const sessionId = await getSessionId(request);
+  if (sessionId === undefined) return null;
 
-  const user = await getUserById(userId);
+  const user = await getUserById(sessionId);
 
   if (user) return { user };
 
   throw await logout(request);
 }
 
-export async function createUserSession({
-  request,
-  userId,
-  remember,
-  redirectTo,
-}: {
+export async function createUserSession({request, userId, remember, redirectTo}: {
   request: Request;
   userId: string;
   remember: boolean;
@@ -68,7 +62,7 @@ export async function createUserSession({
 
 export async function logout(request: Request) {
   const session = await getSession(request);
-  return redirect("/auth", {
+  return redirect("/auth/", {
     headers: {
       "Set-Cookie": await sessionStorage.destroySession(session),
     },

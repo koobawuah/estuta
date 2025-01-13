@@ -20,7 +20,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { users } from "@/models/user.server";
-import { getUserId } from "@/session.server";
+import { getSessionId } from "@/services/session.server";
 import {
 	ArrowTrendingUpIcon,
 	BoltIcon,
@@ -33,6 +33,8 @@ import { json, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Link } from "@remix-run/react";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 import { Button } from "@/components/ui/button";
+import { getUser } from "@/services/auth.server";
+import {User} from "@/types/user.type";
 
 export const description = "A multiple bar chart";
 
@@ -57,12 +59,10 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const userId = await getUserId(request);
-	if (!userId) return redirect("/auth");
+	const data: User| Response = await getUser(request)
+	if (data instanceof Response) return data;
+	return json(data);
 
-	const user = users.find((i) => i.id === userId);
-
-	return json({ user });
 };
 
 export default function MyCourses() {

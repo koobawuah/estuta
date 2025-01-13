@@ -1,9 +1,9 @@
 import * as siteConfig from "@/site.json";
 import { title } from "@/config.shared";
-import { getUserId } from "@/session.server";
+import { getSessionId } from "@/services/session.server";
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/react";
-
+import {getUser} from "@/services/auth.server"
 export const meta: MetaFunction = () => {
 	return [
 		{ title: title() },
@@ -12,8 +12,9 @@ export const meta: MetaFunction = () => {
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const userId = await getUserId(request);
-	if (userId) return redirect("/student");
+	const user = await getUser(request)
+	console.error(user)
+	if (user?.id) return redirect("/student");
 
 	return json({});
 };

@@ -1,5 +1,5 @@
 import { users } from "@/models/user.server";
-import { getUserId } from "@/session.server";
+import { getSessionId } from "@/services/session.server";
 import { json, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form as RmxForm } from "@remix-run/react";
 import { useForm } from "react-hook-form";
@@ -25,8 +25,8 @@ import {
 import PrimaryBtn from "@/components/primary-button";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const userId = await getUserId(request);
-	if (!userId) return redirect("/auth");
+	const userId = await getSessionId(request);
+	if (!userId) return redirect("/auth/student");
 
 	const user = users.find((i) => i.id === userId);
 

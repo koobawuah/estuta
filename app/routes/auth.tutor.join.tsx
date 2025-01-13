@@ -19,24 +19,77 @@ import { Label } from "@/components/ui/label";
 import PrimaryButton from "@/components/primary-button";
 import { safeRedirect } from "remix-utils/safe-redirect";
 import { verifyLogin } from "@/models/user.server";
-import { createUserSession, getUserId } from "@/session.server";
+import { createUserSession, getSessionId } from "@/services/session.server";
 import { validateEmail } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { emailPassRegister } from "@/services/auth.server";
 import { cn } from "@/lib/styles";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const userId = await getUserId(request);
-	if (userId) return redirect("/tutor");
-
 	return json({ success: "ok" });
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
 	const formData = await request.formData();
-	const redirectTo = safeRedirect(formData.get("redirectTo"), "/student");
+	const redirectTo = safeRedirect(formData.get("redirectTo"), "/tutor");
+	const email = formData.get("email");
+	const password = formData.get("password");
+	const firstName = formData.get("first_name");
+	const lastName = formData.get("last_name");
+	const passwordConfirmation = formData.get("password_confirmation");
 
-	return json({});
+	if (!validateEmail(email)) {
+		return json(
+			{ errors: { email: "Email is invalid" } },
+			{ status: 400 },
+		);
+	}
+
+	if (typeof password !== "string" || password.length === 0) {
+		return json(
+			{ errors: { password: "Password is required" } },
+			{ status: 400 },
+		);
+	}
+
+	if (password.length < 8) {
+		return json(
+			{ errors: { password: "Password must be at least 8 characters" } },
+			{ status: 400 },
+		);
+	}
+
+	if (password !== passwordConfirmation) {
+		return json(
+			{ errors: { passwordConfirmation: "Passwords do not match" } },
+			{ status: 400 },
+		);
+	}
+
+	if (typeof firstName !== "string" || firstName.length === 0) {
+		return json(
+			{ errors: { firstName: "First name is required" } },
+			{ status: 400 },
+		);
+	}
+
+	if (typeof lastName !== "string" || lastName.length === 0) {
+		return json(
+			{ errors: { lastName: "Last name is required" } },
+			{ status: 400 },
+		);
+	}
+
+	const result = await emailPassRegister({
+		email: email as string,
+		password: password as string,
+		firstName: firstName as string,
+		lastName: lastName as string,
+		redirectTo: redirectTo as string,
+	});
+
+	return result;
 };
 
 export const meta: MetaFunction = () => {
@@ -54,14 +107,20 @@ export default function TutorJoin() {
 	const actionData = useActionData<typeof action>();
 	const emailRef = useRef<HTMLInputElement>(null);
 	const passwordRef = useRef<HTMLInputElement>(null);
+	const firstNameRef = useRef<HTMLInputElement>(null);
+	const lastNameRef = useRef<HTMLInputElement>(null);
 
-	// useEffect(() => {
-	// 	if (actionData?.errors?.email) {
-	// 		emailRef.current?.focus();
-	// 	} else if (actionData?.errors?.password) {
-	// 		passwordRef.current?.focus();
-	// 	}
-	// }, [actionData]);
+	useEffect(() => {
+		if (actionData?.errors?.email) {
+			emailRef.current?.focus();
+		} else if (actionData?.errors?.password) {
+			passwordRef.current?.focus();
+		} else if (actionData?.errors?.firstName) {
+			firstNameRef.current?.focus();
+		} else if (actionData?.errors?.lastName) {
+			lastNameRef.current?.focus();
+		}
+	}, [actionData]);
 
 	return (
 		<main className="w-full md:min-h-screen ">
@@ -120,8 +179,15 @@ export default function TutorJoin() {
 									type="text"
 									id="FirstName"
 									name="first_name"
+									ref={firstNameRef}
+									aria-invalid={actionData?.errors?.firstName ? true : undefined}
 									className="mt-1 w-full rounded-md border-gray-200 bg-white text-sm text-gray-700 shadow-sm"
 								/>
+								{actionData?.errors?.firstName ? (
+									<div className="pt-1 text-red-700">
+										{actionData.errors.firstName}
+									</div>
+								) : null}
 							</div>
 
 							<div className="col-span-6 sm:col-span-3">
@@ -136,8 +202,15 @@ export default function TutorJoin() {
 									type="text"
 									id="LastName"
 									name="last_name"
+									ref={lastNameRef}
+									aria-invalid={actionData?.errors?.lastName ? true : undefined}
 									className="mt-1 w-full rounded-md border-gray-200 bg-white text-sm text-gray-700 shadow-sm"
 								/>
+								{actionData?.errors?.lastName ? (
+									<div className="pt-1 text-red-700">
+										{actionData.errors.lastName}
+									</div>
+								) : null}
 							</div>
 
 							<div className="col-span-6">
@@ -152,8 +225,15 @@ export default function TutorJoin() {
 									type="email"
 									id="Email"
 									name="email"
+									ref={emailRef}
+									aria-invalid={actionData?.errors?.email ? true : undefined}
 									className="mt-1 w-full rounded-md border-gray-200 bg-white text-sm text-gray-700 shadow-sm"
 								/>
+								{actionData?.errors?.email ? (
+									<div className="pt-1 text-red-700">
+										{actionData.errors.email}
+									</div>
+								) : null}
 							</div>
 
 							<div className="col-span-6 sm:col-span-3">
@@ -168,8 +248,15 @@ export default function TutorJoin() {
 									type="password"
 									id="Password"
 									name="password"
+									ref={passwordRef}
+									aria-invalid={actionData?.errors?.password ? true : undefined}
 									className="mt-1 w-full rounded-md border-gray-200 bg-white text-sm text-gray-700 shadow-sm"
 								/>
+								{actionData?.errors?.password ? (
+									<div className="pt-1 text-red-700">
+										{actionData.errors.password}
+									</div>
+								) : null}
 							</div>
 
 							<div className="col-span-6 sm:col-span-3">
@@ -184,8 +271,14 @@ export default function TutorJoin() {
 									type="password"
 									id="PasswordConfirmation"
 									name="password_confirmation"
+									aria-invalid={actionData?.errors?.passwordConfirmation ? true : undefined}
 									className="mt-1 w-full rounded-md border-gray-200 bg-white text-sm text-gray-700 shadow-sm"
 								/>
+								{actionData?.errors?.passwordConfirmation ? (
+									<div className="pt-1 text-red-700">
+										{actionData.errors.passwordConfirmation}
+									</div>
+								) : null}
 							</div>
 
 							<div className="mt-3 col-span-6">
@@ -205,7 +298,7 @@ export default function TutorJoin() {
 
 							<div className="col-span-6 sm:flex sm:items-center sm:gap-4">
 								<PrimaryButton
-									type="button"
+									type="submit"
 									className="h-12 inline-block shrink-0 rounded-md border border-emerald-600 bg-emerald-600 px-12 py-3 text-sm font-medium text-emerald-50 transition hover:bg-transparent hover:text-emerald-600 focus:outline-none focus:ring active:text-emerald-500"
 								>
 									Create an account

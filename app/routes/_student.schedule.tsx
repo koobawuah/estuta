@@ -21,18 +21,18 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/styles";
 import { users } from "@/models/user.server";
-import { getUserId } from "@/session.server";
+import { getSessionId } from "@/services/session.server";
 import { json, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Link } from "@remix-run/react";
 import { useState } from "react";
+import {User} from "@/types/user.type";
+import {getUser} from "@/services/auth.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const userId = await getUserId(request);
-	if (!userId) return redirect("/auth");
+	const data: User| Response = await getUser(request)
+	if (data instanceof Response) return data;
 
-	const user = users.find((i) => i.id === userId);
-
-	return json({ user });
+	return json(data);
 };
 
 const upcomingCourses = [

@@ -4,18 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { users } from "@/models/user.server";
-import { getUserId } from "@/session.server";
+import { getSessionId } from "@/services/session.server";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { json, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Link } from "@remix-run/react";
 import { useState } from "react";
+import { getUser } from "@/services/auth.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const userId = await getUserId(request);
-	if (!userId) return redirect("/auth");
-
-	const user = users.find((i) => i.id === userId);
-
+	const user = await getUser(request);
 	return json({ user });
 };
 

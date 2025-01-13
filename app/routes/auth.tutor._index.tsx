@@ -19,22 +19,20 @@ import { Label } from "@/components/ui/label";
 import PrimaryButton from "@/components/primary-button";
 import { safeRedirect } from "remix-utils/safe-redirect";
 import { verifyLogin } from "@/models/user.server";
-import { createUserSession, getUserId } from "@/session.server";
+import { createUserSession, getSessionId } from "@/services/session.server";
 import { validateEmail } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import {emailPassLogin} from "@/services/auth.server";
 import { cn } from "@/lib/styles";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const userId = await getUserId(request);
-	if (userId) return redirect("/tutor");
-
 	return json({ success: "ok" });
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
 	const formData = await request.formData();
-	const redirectTo = safeRedirect(formData.get("redirectTo"), "/tutor");
+	const redirectTo ="/tutor";
 	const email = formData.get("email");
 	const password = formData.get("password");
 	const remember = formData.get("remember-me");
@@ -60,25 +58,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 		);
 	}
 
-	const e = await verifyLogin(email);
-	const p = "Admin_2024";
-
-	const user = e && password === p ? e : undefined;
-	// const user = email === e && password === p ? ({ id:'1', email: e, name: 'John', role: 'Admin', }) : null
-
-	if (!user) {
-		return json(
-			{ errors: { email: "Invalid email or password", password: null } },
-			{ status: 400 },
-		);
-	}
-
-	return createUserSession({
-		redirectTo,
-		remember: remember === "on" ? true : false,
-		request,
-		userId: user.id,
+	const result = await emailPassLogin({
+		email: email as string,
+		password: password as string,
+		redirectTo: redirectTo as string
 	});
+
+	return result;
 };
 
 export const meta: MetaFunction = () => {

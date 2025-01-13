@@ -17,16 +17,14 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { users } from "@/models/user.server";
-import { getUserId } from "@/session.server";
+import { getUser } from "@/services/auth.server";
+import { getSessionId } from "@/services/session.server";
 import { BanknotesIcon } from "@heroicons/react/24/outline";
 import { json, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Link, NavLink, Outlet } from "@remix-run/react";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const userId = await getUserId(request);
-	if (!userId) return redirect("/auth");
-
-	const user = users.find((i) => i.id === userId);
+	const user = await getUser(request)
 
 	return json({ user });
 };

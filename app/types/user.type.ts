@@ -1,6 +1,15 @@
+type UserLink = {
+  url: string;
+  link_name: string;
+};
+
 export type User = {
-  id: string;
+  id: number;
   email: string;
-  name: string;
-  role: "admin" | "tutor" | "student";
+  full_name: string;
+  created_at: string;
+  bio: string;
+  image_url: string;
+  links: UserLink[];
+  email_verified: boolean;
 };
